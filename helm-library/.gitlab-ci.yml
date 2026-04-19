@@ -24,8 +24,11 @@ test:
 
 validate:
   stage: validate
-  image: ghcr.io/yannh/kubeconform:latest
+  image: alpine/helm:3.14.0
   script:
+    - wget -qO- https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+    - mv kubeconform /usr/local/bin/kubeconform
+    - chmod +x /usr/local/bin/kubeconform
     - helm template test-release charts/app > rendered.yaml
     - kubeconform -strict -ignore-missing-schemas rendered.yaml
     - rm rendered.yaml

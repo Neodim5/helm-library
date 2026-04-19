@@ -100,10 +100,11 @@ tests:
     set:
       image.repository: nginx
       image.tag: latest
+      service:
+        port: 8080
       ingress:
         enabled: true
         className: traefik
-        service.port: 8080
         hosts:
           - host: test.local
             paths:

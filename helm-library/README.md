@@ -24,6 +24,11 @@ helm-library/
 │       ├── Chart.yaml
 │       ├── values.yaml
 │       ├── values.schema.json
+│       ├── tests/
+│       │   ├── deployment_test.yaml
+│       │   ├── service_test.yaml
+│       │   ├── ingress_test.yaml
+│       │   └── configmap_secret_test.yaml
 │       └── templates/
 │           ├── _helpers.tpl
 │           ├── deployment.tpl
@@ -31,11 +36,6 @@ helm-library/
 │           ├── ingress.tpl
 │           ├── configmap.tpl
 │           └── secret.tpl
-├── tests/
-│   ├── deployment_test.yaml
-│   ├── service_test.yaml
-│   ├── ingress_test.yaml
-│   └── configmap_secret_test.yaml
 ├── .gitlab-ci.yml
 └── README.md
 ```
