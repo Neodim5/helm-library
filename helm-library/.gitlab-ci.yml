@@ -1,0 +1,53 @@
+stages:
+  - lint
+  - test
+  - validate
+  - package
+  - publish
+
+variables:
+  HELM_EXPERIMENTAL_OCI: "1"
+
+lint:
+  stage: lint
+  image: alpine/helm:3.14.0
+  script:
+    - helm lint charts/app
+
+test:
+  stage: test
+  image: alpine/helm:3.14.0
+  before_script:
+    - helm plugin install https://github.com/helm-unittest/helm-unittest.git || true
+  script:
+    - helm unittest charts/app
+
+validate:
+  stage: validate
+  image: ghcr.io/yannh/kubeconform:latest
+  script:
+    - helm template test-release charts/app > rendered.yaml
+    - kubeconform -strict -ignore-missing-schemas rendered.yaml
+    - rm rendered.yaml
+
+package:
+  stage: package
+  image: alpine/helm:3.14.0
+  script:
+    - helm package charts/app
+  artifacts:
+    paths:
+      - app-*.tgz
+  only:
+    - tags
+    - main
+    - master
+
+publish:
+  stage: publish
+  image: alpine/helm:3.14.0
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | helm registry login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - helm push app-*.tgz oci://$CI_REGISTRY_IMAGE/charts/app
+  only:
+    - tags

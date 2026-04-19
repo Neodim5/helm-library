@@ -1,0 +1,60 @@
+suite: Service tests
+
+templates:
+  - templates/service.tpl
+
+tests:
+  - it: should render service when enabled
+    set:
+      image.repository: nginx
+      image.tag: latest
+      service:
+        enabled: true
+        type: ClusterIP
+        port: 80
+        targetPort: 8080
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+
+  - it: should not render service when disabled
+    set:
+      image.repository: nginx
+      image.tag: latest
+      service:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render NodePort service
+    set:
+      image.repository: nginx
+      image.tag: latest
+      service:
+        enabled: true
+        type: NodePort
+        port: 8080
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+
+  - it: should use correct selector labels
+    set:
+      image.repository: nginx
+      image.tag: latest
+      service:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.selector
+          value:
+            app.kubernetes.io/name: app
+            app.kubernetes.io/instance: release-name

@@ -1,0 +1,149 @@
+suite: Deployment tests
+
+templates:
+  - templates/deployment.tpl
+
+tests:
+  - it: should render deployment with image
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:latest
+
+  - it: should render deployment with registry
+    set:
+      image.registry: registry.example.com
+      image.repository: myapp
+      image.tag: v1.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: registry.example.com/myapp:v1.0.0
+
+  - it: should set replicas
+    set:
+      deployment.replicas: 3
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should include resource limits
+    set:
+      image.repository: nginx
+      image.tag: latest
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "128Mi"
+        limits:
+          cpu: "200m"
+          memory: "256Mi"
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].resources.limits
+
+  - it: should set liveness probe
+    set:
+      image.repository: nginx
+      image.tag: latest
+      probes:
+        enabled: true
+        liveness:
+          type: http
+          path: /health
+          port: 8080
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].livenessProbe
+
+  - it: should set readiness probe
+    set:
+      image.repository: nginx
+      image.tag: latest
+      probes:
+        enabled: true
+        readiness:
+          type: http
+          path: /ready
+          port: 8080
+    asserts:
+      - isNotNull:
+          path: spec.template.spec.containers[0].readinessProbe
+
+  - it: should set security context
+    set:
+      image.repository: nginx
+      image.tag: latest
+      security:
+        runAsNonRoot: true
+        readOnlyRootFilesystem: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+
+  - it: should set nodeSelector
+    set:
+      image.repository: nginx
+      image.tag: latest
+      scheduling:
+        nodeSelector:
+          kubernetes.io/os: linux
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: linux
+
+  - it: should set tolerations
+    set:
+      image.repository: nginx
+      image.tag: latest
+      scheduling:
+        tolerations:
+          - key: "key1"
+            operator: "Equal"
+            value: "value1"
+            effect: "NoSchedule"
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: "key1"
+            operator: "Equal"
+            value: "value1"
+            effect: "NoSchedule"
+
+  - it: should set pod annotations
+    set:
+      image.repository: nginx
+      image.tag: latest
+      deployment:
+        podAnnotations:
+          prometheus.io/scrape: "true"
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations
+          value:
+            prometheus.io/scrape: "true"
+
+  - it: should set image pull secrets
+    set:
+      image.repository: nginx
+      image.tag: latest
+      image.pullSecrets:
+        - regcred
+    asserts:
+      - contains:
+          path: spec.template.spec.imagePullSecrets
+          content:
+            name: regcred
