@@ -1,0 +1,115 @@
+suite: Ingress tests
+
+templates:
+  - templates/ingress.tpl
+
+tests:
+  - it: should render ingress when enabled
+    set:
+      image.repository: nginx
+      image.tag: latest
+      ingress:
+        enabled: true
+        className: traefik
+        hosts:
+          - host: test.local
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.ingressClassName
+          value: traefik
+
+  - it: should not render ingress when disabled
+    set:
+      image.repository: nginx
+      image.tag: latest
+      ingress:
+        enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should set annotations
+    set:
+      image.repository: nginx
+      image.tag: latest
+      ingress:
+        enabled: true
+        className: nginx
+        annotations:
+          kubernetes.io/ingress.class: nginx
+        hosts:
+          - host: test.local
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - equal:
+          path: metadata.annotations
+          value:
+            kubernetes.io/ingress.class: nginx
+
+  - it: should configure TLS
+    set:
+      image.repository: nginx
+      image.tag: latest
+      ingress:
+        enabled: true
+        className: traefik
+        tls:
+          enabled: true
+          secretName: tls-secret
+        hosts:
+          - host: secure.example.com
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - isNotNull:
+          path: spec.tls
+      - equal:
+          path: spec.tls[0].secretName
+          value: tls-secret
+
+  - it: should configure multiple hosts
+    set:
+      image.repository: nginx
+      image.tag: latest
+      ingress:
+        enabled: true
+        className: traefik
+        hosts:
+          - host: app1.example.com
+            paths:
+              - path: /
+                pathType: Prefix
+          - host: app2.example.com
+            paths:
+              - path: /api
+                pathType: Prefix
+    asserts:
+      - lengthEqual:
+          path: spec.rules
+          count: 2
+
+  - it: should use correct backend service
+    set:
+      image.repository: nginx
+      image.tag: latest
+      ingress:
+        enabled: true
+        className: traefik
+        service.port: 8080
+        hosts:
+          - host: test.local
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8080

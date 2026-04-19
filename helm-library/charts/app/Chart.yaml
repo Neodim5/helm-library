@@ -1,0 +1,15 @@
+apiVersion: v2
+name: app
+type: library
+version: 1.0.0
+description: Production-ready Helm library chart for applications
+keywords:
+  - library
+  - application
+  - production
+home: https://gitlab.com/your-group/helm-library
+sources:
+  - https://gitlab.com/your-group/helm-library
+maintainers:
+  - name: Platform Team
+    email: platform@example.com

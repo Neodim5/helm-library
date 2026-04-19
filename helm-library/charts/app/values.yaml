@@ -1,0 +1,74 @@
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  registry: ""
+  repository: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+deployment:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  podAnnotations: {}
+  podLabels: {}
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: false
+  className: traefik
+  annotations: {}
+  hosts:
+    - host: example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    enabled: false
+    secretName: ""
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+probes:
+  enabled: true
+  liveness:
+    type: http
+    path: /health
+    port: 8080
+  readiness:
+    type: http
+    path: /ready
+    port: 8080
+
+env:
+  plain: {}
+  configMap: {}
+  secret: {}
+
+configmap:
+  enabled: true
+
+secret:
+  enabled: true
+
+scheduling:
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+security:
+  runAsNonRoot: true
+  readOnlyRootFilesystem: true
